@@ -1,0 +1,28 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# SQLite Databases & logs
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Deployment & IDE
+.vercel
+.netlify
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+*.pkl

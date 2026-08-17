@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — ZeroBait{% endblock %}
+
+{% block content %}
+<script>
+    window.location.replace('/login?mode=register');
+</script>
+<main class="page-banner" style="text-align: center; padding: 4rem 1.5rem;">
+    <p class="muted-text">Redirecting to Access Portal...</p>
+    <a href="/login?mode=register" class="btn-primary" style="margin-top: 1rem;">Click here if not redirected</a>
+</main>
+{% endblock %}

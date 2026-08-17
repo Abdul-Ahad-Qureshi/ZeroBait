@@ -1,0 +1,451 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">ZeroBait<br><span class="gradient-text">Threat Intelligence</span></h1>
+        <p class="hero-subtitle">
+            Enterprise-grade cyber threat defense platform delivering real-time lexical entropy analysis, DNS infrastructure verification, and zero-day phishing interception.
+        </p>
+
+        <!-- Hero Stats -->
+        <div class="hero-stats">
+            <div class="hero-stat-card">
+                <div class="stat-number" id="hero-stat-total">0</div>
+                <div class="stat-label">Total Scans Logged</div>
+            </div>
+            <div class="hero-stat-card">
+                <div class="stat-number" id="hero-stat-high">0</div>
+                <div class="stat-label">Zero-Day Threats</div>
+            </div>
+            <div class="hero-stat-card">
+                <div class="stat-number">99.4%</div>
+                <div class="stat-label">Detection Precision</div>
+            </div>
+        </div>
+
+        <!-- Quick CTA -->
+        <div class="hero-cta">
+            <button class="btn-primary btn-large" id="scroll-to-scan">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Scan Target URL
+            </button>
+            <button class="btn-ghost btn-large" onclick="openDefangModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                URL Defanger Tool
+            </button>
+            <button class="btn-ghost btn-large" onclick="openIocModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export IOCs
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Live Threat Activity Ticker -->
+<div class="threat-ticker" id="threat-ticker">
+    <div class="ticker-pulse">
+        <span class="pulse-dot"></span>
+        Live Feed
+    </div>
+    <div class="ticker-content" id="ticker-text">
+        Ingesting global threat telemetry streams...
+    </div>
+</div>
+
+<!-- Features Strip -->
+<section class="features-strip">
+    <div class="feature-col">
+        <div class="feature-icon">🎯</div>
+        <h4>Brand Impersonation Radar</h4>
+        <p>Detects spoofing targeting 25+ global brands (PayPal, Microsoft, Apple, Binance).</p>
+    </div>
+    <div class="feature-col">
+        <div class="feature-icon">📬</div>
+        <h4>Deep Mail & DNS Intel</h4>
+        <p>Analyzes MX routing, SPF/DMARC spoofing vectors, and sub-second A-records.</p>
+    </div>
+    <div class="feature-col">
+        <div class="feature-icon">🛡️</div>
+        <h4>Homograph & SSRF Shield</h4>
+        <p>Flags Cyrillic Unicode lookalikes and blocks internal network traversal probes.</p>
+    </div>
+    <div class="feature-col">
+        <div class="feature-icon">📦</div>
+        <h4>SOC SIEM Blocklists</h4>
+        <p>Instant exports in STIX 2.1 JSON, CSV, and Plaintext firewall formats.</p>
+    </div>
+</section>
+
+<!-- Scanner Container -->
+<div class="container" id="scanner">
+
+    <!-- 7-Day Trend Sparkline -->
+    <div class="trend-bar" id="trend-bar">
+        <span class="trend-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            7-Day Activity Trend
+        </span>
+        <div class="sparkline-container">
+            <svg id="sparkline-svg" width="160" height="32" viewBox="0 0 160 32" style="overflow:visible"></svg>
+        </div>
+        <span class="trend-legend">
+            <span class="legend-dot" style="background:#ffffff;"></span> Total Scans
+            <span class="legend-dot" style="background:#737373; margin-left:0.6rem;"></span> High Threats
+        </span>
+        <span id="trend-days-label" class="muted-text" style="font-size:0.75rem;"></span>
+    </div>
+
+    <div class="glass-panel">
+        <!-- Tab Navigation -->
+        <div class="tabs" role="tablist">
+            <button class="tab active" id="tab-single" role="tab" aria-selected="true" onclick="switchTab('single')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Single URL Inspection
+            </button>
+            <button class="tab" id="tab-bulk" role="tab" aria-selected="false" onclick="switchTab('bulk')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Batch Scanner (Up to 25)
+            </button>
+        </div>
+
+        <!-- Single URL Tab -->
+        <div class="tab-panel active" id="panel-single">
+
+            {% if error %}
+            <div class="alert alert-error" role="alert" style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.25); color:#ffffff; padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+                <strong>Notice:</strong> {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/" class="search-container" id="scan-form">
+                <div class="input-wrapper">
+                    <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    <input type="text" name="url" id="url-input"
+                        placeholder="Enter URL to inspect (e.g., https://example.com/login)"
+                        autocomplete="off" required
+                        {% if url %}value="{{ url }}"{% endif %}>
+                    <span class="kbd-hint" title="Press Enter to submit">↵</span>
+                </div>
+                <button type="submit" id="analyze-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <span>Analyze</span>
+                </button>
+            </form>
+
+            {% if score is defined %}
+            {% set levelClass = threat_level | lower %}
+            <div id="result-panel" class="result-panel">
+
+                <!-- Score Section -->
+                <div class="score-section">
+                    <div class="score-details">
+                        <div class="threat-badge badge-{{ levelClass }}">
+                            {% if levelClass == 'high' %}🚨 CRITICAL RISK{% elif levelClass == 'medium' %}⚠️ ELEVATED RISK{% else %}✓ CLEAN / LOW RISK{% endif %}
+                            — {{ score }}% Probability
+                        </div>
+                        <p class="analyzed-url" id="analyzed-url" title="{{ url }}">{{ url }}</p>
+                        
+                        <div style="display: flex; gap: 0.5rem; align-items: center; margin: 0.5rem 0 1rem; flex-wrap: wrap;">
+                            <span class="muted-text" style="font-size: 0.8rem;">Defanged:</span>
+                            <code style="font-family: var(--font-mono); font-size: 0.82rem; background: #000; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); color: #fff;">{{ defanged_url }}</code>
+                            <button type="button" class="btn-ghost" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ defanged_url }}'); showToast('Defanged URL copied!', 'success');">Copy</button>
+                        </div>
+
+                        {% if safe_browsing %}
+                        <p class="safe-browsing-label">
+                            <span class="label-dot"></span>
+                            Telemetry Feed: {{ safe_browsing }}
+                        </p>
+                        {% endif %}
+                        <div class="action-row">
+                            <button id="copy-link-btn" class="btn-ghost" type="button">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Copy Link
+                            </button>
+                            <button id="qr-modal-btn" class="btn-ghost" type="button" onclick="openQrModal('{{ url }}')">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                                Safe QR
+                            </button>
+                            <button id="export-btn" class="btn-ghost" type="button">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                JSON
+                            </button>
+                            <button id="print-report-btn" class="btn-ghost" type="button" onclick="window.print()">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                Print Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Gauge -->
+                    <div class="gauge-wrapper">
+                        <svg class="gauge-svg" viewBox="0 0 100 100">
+                            <circle class="gauge-track" cx="50" cy="50" r="40"/>
+                            <circle id="gauge-arc" class="gauge-arc" cx="50" cy="50" r="40"/>
+                        </svg>
+                        <div class="gauge-center-text" id="score-circle" data-score="{{ score }}">
+                            <div class="score-val"><span id="score-value">0</span><span class="score-pct">%</span></div>
+                            <div class="gauge-sublabel">Risk Index</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Brand Impersonation Radar Alert -->
+                {% if domain_info.is_brand_impersonation %}
+                <div class="brand-radar-card">
+                    <div class="brand-radar-text">
+                        <h4>🎯 Targeted Brand Impersonation Detected</h4>
+                        <p>This URL appears to spoof <strong>{{ domain_info.brand_target }}</strong> while being hosted on an unauthorized root domain (<code>{{ domain_info.domain }}</code>).</p>
+                    </div>
+                    <span class="threat-badge badge-high">High Urgency</span>
+                </div>
+                {% endif %}
+
+                <!-- Forensic Tabbed Navigation -->
+                <div class="forensic-tabs">
+                    <button type="button" class="forensic-tab-btn active" onclick="switchForensicTab('overview')">Signals & Threat Matrix</button>
+                    <button type="button" class="forensic-tab-btn" onclick="switchForensicTab('dns-mail')">DNS & Mail Exchange</button>
+                    <button type="button" class="forensic-tab-btn" onclick="switchForensicTab('lexical')">Lexical & Entropy</button>
+                </div>
+
+                <!-- Tab 1: Overview & Flags -->
+                <div class="forensic-tab-panel active" id="fpanel-overview">
+                    <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem;">URL Token Breakdown</h4>
+                    <div class="url-chips" id="url-chips"></div>
+
+                    <!-- Security Signals Matrix -->
+                    <h4 style="font-size: 0.95rem; margin: 1.5rem 0 0.5rem;">Security Signals Matrix</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem;">
+                        <div class="glass-card" style="padding: 0.85rem;">
+                            <div class="muted-text" style="font-size: 0.72rem; text-transform: uppercase;">SSL / HTTPS</div>
+                            <div style="color: #ffffff; font-weight: 700; font-family: var(--font-mono); margin-top: 0.2rem;">
+                                {% if domain_info.uses_https %}✓ SECURED{% else %}⚠️ UNENCRYPTED{% endif %}
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 0.85rem;">
+                            <div class="muted-text" style="font-size: 0.72rem; text-transform: uppercase;">DNS Resolution</div>
+                            <div style="color: #ffffff; font-weight: 700; font-family: var(--font-mono); margin-top: 0.2rem;">
+                                {% if domain_info.has_dns %}✓ RESOLVING{% else %}🚨 NXDOMAIN / DEAD{% endif %}
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 0.85rem;">
+                            <div class="muted-text" style="font-size: 0.72rem; text-transform: uppercase;">Domain Lifecycle</div>
+                            <div style="color: #ffffff; font-weight: 700; font-family: var(--font-mono); margin-top: 0.2rem;">
+                                {% if domain_info.age_days >= 0 %}{{ domain_info.age_days }} Days Old{% else %}Unknown / Private{% endif %}
+                            </div>
+                        </div>
+                        <div class="glass-card" style="padding: 0.85rem;">
+                            <div class="muted-text" style="font-size: 0.72rem; text-transform: uppercase;">Homograph Status</div>
+                            <div style="color: #ffffff; font-weight: 700; font-family: var(--font-mono); margin-top: 0.2rem;">
+                                {% if domain_info.is_homograph %}🚨 SPOOFED UNICODE{% else %}✓ CLEAN IDN{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Threat Flags -->
+                    <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Forensic Indicator Breakdown</h4>
+                    {% if flags %}
+                    <div class="flags-list">
+                        {% for flag in flags %}
+                        <div class="flag-item">
+                            <span>{{ flag.label }}</span>
+                            <span class="flag-pts">+{{ flag.points }} pts</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="muted-text">Zero threat flags triggered. Baseline lexical features align with legitimate web destinations.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Tab 2: DNS & Mail Intel -->
+                <div class="forensic-tab-panel" id="fpanel-dns-mail">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+                        <div class="glass-card">
+                            <h5 style="margin-bottom: 0.5rem; color: #fff;">Authoritative A-Records</h5>
+                            {% if domain_info.ip_addresses %}
+                            <ul style="list-style: none; font-family: var(--font-mono); font-size: 0.85rem; color: var(--mono-silver);">
+                                {% for ip in domain_info.ip_addresses %}
+                                <li>• {{ ip }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="muted-text" style="font-size: 0.82rem;">No A-records resolved for this target.</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="glass-card">
+                            <h5 style="margin-bottom: 0.5rem; color: #fff;">Mail Exchange (MX) Routing</h5>
+                            {% if domain_info.mx_records %}
+                            <ul style="list-style: none; font-family: var(--font-mono); font-size: 0.85rem; color: var(--mono-silver);">
+                                {% for mx in domain_info.mx_records %}
+                                <li>• {{ mx }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="muted-text" style="font-size: 0.82rem;">No MX records (domain cannot receive standard email).</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="glass-card">
+                            <h5 style="margin-bottom: 0.5rem; color: #fff;">Nameservers & Registrar</h5>
+                            <p style="font-size: 0.85rem; color: #ffffff; font-family: var(--font-mono); margin-bottom: 0.25rem;">Registrar: {{ domain_info.registrar }}</p>
+                            {% if domain_info.name_servers %}
+                            <ul style="list-style: none; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);">
+                                {% for ns in domain_info.name_servers %}
+                                <li>{{ ns }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Lexical & Entropy -->
+                <div class="forensic-tab-panel" id="fpanel-lexical">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <div class="glass-card">
+                            <span class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Shannon Entropy</span>
+                            <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin: 0.3rem 0;">
+                                {{ domain_info.entropy }} <span style="font-size: 0.8rem; color: var(--text-muted);">bits</span>
+                            </div>
+                            <p class="muted-text" style="font-size: 0.75rem;">Entropy > 4.4 suggests randomized machine-generated obfuscation.</p>
+                        </div>
+                        <div class="glass-card">
+                            <span class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Length & Token Density</span>
+                            <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin: 0.3rem 0;">
+                                {{ features.url_length }} <span style="font-size: 0.8rem; color: var(--text-muted);">characters</span>
+                            </div>
+                            <p class="muted-text" style="font-size: 0.75rem;">Hostname Length: {{ features.hostname_length }} | Dots: {{ features.count_dots }}</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Bulk Scanner Tab -->
+        <div class="tab-panel" id="panel-bulk">
+            <p class="muted-text" style="margin-bottom: 1rem;">Enter up to 25 URLs (one per line) for concurrent batch inspection.</p>
+            <textarea id="bulk-input" rows="5" placeholder="https://example1.com&#10;https://example2.org/login&#10;http://192.168.1.1"
+                style="width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: #ffffff; padding: 1rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.9rem; outline: none; margin-bottom: 1rem; resize: vertical;"></textarea>
+            
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn-primary" id="bulk-scan-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Analyze Batch
+                </button>
+            </div>
+
+            <div id="bulk-results" style="margin-top: 1.5rem; overflow-x: auto;"></div>
+        </div>
+
+    </div>
+
+    <!-- Personal Scan History Strip (Authenticated Users Only) -->
+    {% if user %}
+    <div class="glass-card" style="margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h4 style="color: var(--mono-white); margin: 0;">Your Recent Scans ({{ user.username }})</h4>
+                <p class="muted-text" style="font-size: 0.8rem;">Private audit history linked exclusively to your account</p>
+            </div>
+            <div id="history-filters" style="display: flex; gap: 0.4rem;">
+                <button type="button" class="filter-pill active btn-ghost" data-filter="all" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">All</button>
+                <button type="button" class="filter-pill btn-ghost" data-filter="High" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">High</button>
+                <button type="button" class="filter-pill btn-ghost" data-filter="Medium" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">Medium</button>
+                <button type="button" class="filter-pill btn-ghost" data-filter="Low" style="padding: 0.25rem 0.6rem; font-size: 0.75rem;">Low</button>
+            </div>
+        </div>
+        <div id="scan-history"></div>
+    </div>
+    {% else %}
+    <!-- Guest Notification -->
+    <div class="glass-card" style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.75rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h4 style="color: var(--mono-white); margin-bottom: 0.25rem; font-size: 1rem;">🔒 Zero-Retention Guest Inspection</h4>
+            <p class="muted-text" style="font-size: 0.85rem;">You are scanning in ephemeral guest mode. No personal history is saved on this device. <a href="/tracker" style="color: #fff; text-decoration: underline;">View the Global Tracker</a> for public streams.</p>
+        </div>
+        <a href="/login" class="btn-primary" style="padding: 0.5rem 1.1rem; font-size: 0.85rem;">Sign In to Save History</a>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- URL Defanger / Sanitizer Modal -->
+<div class="modal-overlay" id="defang-modal">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 0.5rem; color: #fff;">SOC URL Defanger & Sanitizer</h3>
+        <p class="muted-text" style="font-size: 0.85rem; margin-bottom: 1.25rem;">Transform active links into inert text for safe ticketing & SIEM sharing.</p>
+        
+        <input type="text" id="defang-input" placeholder="Paste URL here..."
+            style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 0.75rem; outline: none;">
+        
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <button type="button" class="btn-primary" style="flex: 1;" onclick="applyDefang()">Defang (hxxp)</button>
+            <button type="button" class="btn-ghost" style="flex: 1;" onclick="applyRefang()">Refang (http)</button>
+        </div>
+
+        <div class="code-box" id="defang-output" style="text-align: left; min-height: 48px; word-break: break-all; margin-bottom: 1.25rem;">
+            Awaiting input...
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn-ghost" style="flex: 1;" onclick="copyDefanged()">Copy Result</button>
+            <button type="button" class="btn-ghost" style="flex: 1;" onclick="closeDefangModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- IOC Export Modal -->
+<div class="modal-overlay" id="ioc-modal">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 0.5rem; color: #fff;">Export IOC Indicators</h3>
+        <p class="muted-text" style="font-size: 0.85rem; margin-bottom: 1.5rem;">Download active high-risk indicators of compromise for perimeter defense.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <a href="/api/ioc/export?format=txt" class="btn-ghost" style="justify-content: center;">
+                📄 Plaintext Firewall Blocklist (.txt)
+            </a>
+            <a href="/api/ioc/export?format=csv" class="btn-ghost" style="justify-content: center;">
+                📊 CSV Spreadsheet Format (.csv)
+            </a>
+            <a href="/api/ioc/export?format=stix" class="btn-ghost" style="justify-content: center;">
+                🛡️ STIX 2.1 Threat Intel Bundle (.json)
+            </a>
+        </div>
+
+        <button type="button" class="btn-ghost" style="width: 100%;" onclick="closeIocModal()">Close</button>
+    </div>
+</div>
+
+<!-- Safe QR Modal -->
+<div class="modal-overlay" id="qr-modal">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 0.5rem; color: #fff;">Safe QR Inspector</h3>
+        <p class="muted-text" style="font-size: 0.82rem; margin-bottom: 1.25rem;">Inspect mobile phishing vectors without following target redirects.</p>
+        <div style="background: #ffffff; padding: 1rem; border-radius: 8px; display: inline-block; margin-bottom: 1.25rem;">
+            <img id="qr-image" src="" alt="Safe QR Code" style="width: 160px; height: 160px; display: block;">
+        </div>
+        <p id="qr-url-text" class="muted-text" style="font-family: var(--font-mono); font-size: 0.75rem; word-break: break-all; margin-bottom: 1.5rem;"></p>
+        <button type="button" class="btn-ghost" style="width: 100%;" onclick="closeQrModal()">Dismiss</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{% if score is defined %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    animateGauge({{ score }}, '{{ levelClass }}');
+    renderUrlChips('{{ url }}');
+    renderHistory();
+});
+</script>
+{% endif %}
+{% endblock %}

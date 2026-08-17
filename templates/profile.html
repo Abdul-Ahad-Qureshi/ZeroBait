@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Analyst Workspace — ZeroBait{% endblock %}
+
+{% block content %}
+<main class="page-banner" style="text-align: center; padding: 4rem 1.5rem 2rem;">
+    <span class="history-pill pill-medium" style="margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Private Workspace</span>
+    <h1 style="font-size: 2.2rem; margin: 0.5rem 0;">Analyst Workspace</h1>
+    <p class="muted-text">Account: <strong>{{ user.username }}</strong> &nbsp;·&nbsp; Member since {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'Active' }}</p>
+</main>
+
+<section class="profile-section container" style="max-width: 1020px; padding-bottom: 5rem;">
+
+    <!-- Account Details & GDPR Control Card -->
+    <div class="glass-card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="font-size: 1.1rem; color: var(--mono-white); margin: 0;">Account Identity & Privacy Controls</h3>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="/api/user/history/export" class="btn-ghost" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                    📥 Export CSV
+                </a>
+                <button type="button" class="btn-ghost" onclick="purgeMyHistory()" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; color: #ff8888; border-color: rgba(255,100,100,0.3);">
+                    🗑️ Purge History
+                </button>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
+            <div>
+                <p class="muted-text" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Username</p>
+                <p style="color: var(--mono-white); font-weight: 700; font-size: 1.05rem;">{{ user.username }}</p>
+            </div>
+            <div>
+                <p class="muted-text" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Registered Email</p>
+                <p style="color: var(--mono-white); font-weight: 700; font-size: 1.05rem;">{{ user.email }}</p>
+            </div>
+            <div>
+                <p class="muted-text" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Your Total Inspections</p>
+                <p style="color: var(--mono-white); font-weight: 700; font-size: 1.05rem;">{{ total_scans }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scan History with Search & Filter -->
+    <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <h3 style="color: var(--mono-white); font-size: 1.1rem; margin-bottom: 0.2rem;">Your Personal Scan History</h3>
+                <p class="muted-text" style="font-size: 0.85rem;">Showing {{ scans|length }} of {{ total_scans }} scans (strictly private to your account)</p>
+            </div>
+
+            <!-- Search & Filter Controls -->
+            <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="profile-search" placeholder="Search target URL..." 
+                    style="background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.45rem 0.8rem; border-radius: 6px; font-size: 0.85rem; outline: none; width: 180px;">
+                
+                <select id="profile-level-filter" 
+                    style="background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.45rem 0.8rem; border-radius: 6px; font-size: 0.85rem; outline: none; cursor: pointer;">
+                    <option value="all">All Threat Levels</option>
+                    <option value="High">High Risk</option>
+                    <option value="Medium">Medium Risk</option>
+                    <option value="Low">Low Risk</option>
+                </select>
+
+                <button type="button" class="btn-ghost" onclick="window.print()" style="padding: 0.45rem 0.8rem; font-size: 0.85rem;">
+                    Print Log
+                </button>
+            </div>
+        </div>
+
+        {% if scans %}
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th style="width: 170px;">Timestamp (UTC)</th>
+                        <th>Target Domain / URL</th>
+                        <th style="width: 120px;">Threat Score</th>
+                        <th style="width: 140px;">Classification</th>
+                    </tr>
+                </thead>
+                <tbody id="profile-table-body">
+                    {% for scan in scans %}
+                    <tr class="profile-scan-row" data-url="{{ scan.url | lower }}" data-level="{{ scan.threat_level }}">
+                        <td style="font-size: 0.85rem; color: var(--mono-light-gray); font-family: var(--font-mono);">
+                            {{ scan.timestamp.strftime('%Y-%m-%d %H:%M') if scan.timestamp else '—' }}
+                        </td>
+                        <td style="word-break: break-all;">
+                            <a href="/?url={{ scan.url | urlencode }}" style="color: var(--mono-white); text-decoration: underline; font-weight: 500; font-family: var(--font-mono); font-size: 0.88rem;">
+                                {{ scan.url }}
+                            </a>
+                        </td>
+                        <td style="font-weight: 800; font-family: var(--font-mono); color: var(--mono-white);">
+                            {{ "%.1f"|format(scan.score) }}%
+                        </td>
+                        <td>
+                            {% if scan.threat_level == 'High' %}
+                            <span class="history-pill pill-high">HIGH RISK</span>
+                            {% elif scan.threat_level == 'Medium' %}
+                            <span class="history-pill pill-medium">MEDIUM RISK</span>
+                            {% else %}
+                            <span class="history-pill pill-low">LOW RISK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem;">
+            {% if page > 1 %}
+            <a href="/profile?page={{ page - 1 }}" class="btn-ghost" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">&larr; Previous</a>
+            {% endif %}
+            <span class="muted-text" style="font-size: 0.85rem;">Page {{ page }} of {{ total_pages }}</span>
+            {% if page < total_pages %}
+            <a href="/profile?page={{ page + 1 }}" class="btn-ghost" style="padding: 0.4rem 0.85rem; font-size: 0.85rem;">Next &rarr;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <p class="muted-text">Zero inspection records logged for this profile yet. <a href="/#scanner" style="color: var(--mono-white); text-decoration: underline;">Launch the scanner</a>.</p>
+        {% endif %}
+    </div>
+
+</section>
+
+<script>
+async function purgeMyHistory() {
+    if (!confirm("Are you sure you want to permanently delete all your personal scan history? This action cannot be undone under GDPR Article 17.")) {
+        return;
+    }
+    try {
+        const res = await fetch('/api/user/history/clear', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            showToast('Your scan history has been wiped.', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.detail || 'Failed to purge history.', 'error');
+        }
+    } catch {
+        showToast('Network error purging history.', 'error');
+    }
+}
+</script>
+{% endblock %}

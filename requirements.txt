@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+pandas
+scikit-learn
+joblib
+python-whois
+dnspython
+sqlalchemy
+passlib[bcrypt]
+bcrypt
+itsdangerous
+email-validator
+pydantic

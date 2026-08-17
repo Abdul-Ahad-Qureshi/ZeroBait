@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}Threat Database & Intel Repository — ZeroBait{% endblock %}
+
+{% block content %}
+<!-- Page Banner -->
+<section class="page-banner" style="text-align: center; padding: 4.5rem 1.5rem 2rem;">
+    <div style="max-width: 820px; margin: 0 auto;">
+        <span class="history-pill pill-high" style="margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Intelligence Feed</span>
+        <h1 style="font-size: clamp(2.2rem, 4.5vw, 3.2rem); margin: 0.5rem 0 1rem;">Threat Database & Repository</h1>
+        <p class="muted-text" style="font-size: 1.05rem; line-height: 1.6;">
+            Searchable threat intelligence archive cataloging intercepted zero-day phishing kits, brand impersonators, and malicious domain infrastructures.
+        </p>
+    </div>
+</section>
+
+<div class="container" style="max-width: 1200px; padding-bottom: 5rem;">
+
+    <!-- Filter & Batch Action Toolbar -->
+    <div class="glass-panel" style="margin-bottom: 2rem; padding: 1.5rem 2rem;">
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+            
+            <div style="flex: 1; min-width: 260px; position: relative;">
+                <input type="text" id="threat-db-search" placeholder="Search by domain, keyword, or URL..." 
+                    style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.75rem 1rem 0.75rem 2.5rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.9rem; outline: none;">
+                <svg style="position: absolute; left: 0.85rem; top: 0.85rem; color: var(--text-muted);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </div>
+
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+                <select id="threat-db-level" 
+                    style="background: #111; border: 1px solid var(--border); color: #fff; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.85rem; outline: none; cursor: pointer;">
+                    <option value="all">All Severity Levels</option>
+                    <option value="High">Critical Risk (&ge; 75%)</option>
+                    <option value="Medium">Elevated Risk (40-74%)</option>
+                    <option value="Low">Low / Baseline</option>
+                </select>
+
+                <select id="threat-page-size"
+                    style="background: #111; border: 1px solid var(--border); color: #fff; padding: 0.7rem 0.9rem; border-radius: var(--radius-sm); font-size: 0.85rem; outline: none; cursor: pointer;">
+                    <option value="10">10 per page</option>
+                    <option value="25" selected>25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                </select>
+
+                <div style="display: flex; gap: 0.4rem;">
+                    <button type="button" class="btn-primary" onclick="openCsvImportModal()" style="font-size: 0.82rem; padding: 0.7rem 1rem;">
+                        📥 Import CSV / Batch
+                    </button>
+                    <button type="button" class="btn-ghost" onclick="openExportModal()" style="font-size: 0.82rem; padding: 0.7rem 1rem;">
+                        📊 Export Dataset
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Threat Category Statistics -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div class="glass-card" style="padding: 1.25rem;">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Credential Traps</div>
+            <div style="font-size: 1.35rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-top: 0.3rem;">38% of Index</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Spoofed login / auth pages</p>
+        </div>
+        <div class="glass-card" style="padding: 1.25rem;">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Brand Impersonation</div>
+            <div style="font-size: 1.35rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-top: 0.3rem;">32% of Index</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">PayPal, Microsoft, Banking mimicry</p>
+        </div>
+        <div class="glass-card" style="padding: 1.25rem;">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Homoglyph Attacks</div>
+            <div style="font-size: 1.35rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-top: 0.3rem;">17% of Index</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Punycode `xn--` & mixed scripts</p>
+        </div>
+        <div class="glass-card" style="padding: 1.25rem;">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Direct IP & Obfuscation</div>
+            <div style="font-size: 1.35rem; font-weight: 800; font-family: var(--font-mono); color: #fff; margin-top: 0.3rem;">13% of Index</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Hex/IP bypass without hostnames</p>
+        </div>
+    </div>
+
+    <!-- Bulk Selection Floating Bar -->
+    <div id="bulk-action-bar" style="display: none; background: rgba(18, 18, 18, 0.95); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 1.5rem; margin-bottom: 1.5rem; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="color: #ffffff; font-size: 0.9rem;">
+            <strong id="selected-count">0</strong> records selected
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="button" class="btn-ghost" onclick="copySelectedUrls()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                📋 Copy Defanged URLs
+            </button>
+            <button type="button" class="btn-ghost" onclick="exportSelected('csv')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                📥 Export CSV
+            </button>
+            <button type="button" class="btn-ghost" onclick="exportSelected('stix')" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">
+                🛡️ Export STIX 2.1
+            </button>
+            <button type="button" class="btn-ghost" onclick="clearSelection()" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--text-muted);">
+                Deselect All
+            </button>
+        </div>
+    </div>
+
+    <!-- Threat Records Table with Enterprise High-Density Engine -->
+    <div class="glass-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+            <h3 style="color: #fff; font-size: 1.15rem; margin: 0;">Indexed Threat Indicators</h3>
+            <span class="muted-text" id="threat-count-label" style="font-size: 0.85rem;">Showing latest verified indicators</span>
+        </div>
+
+        <div class="table-responsive" style="overflow-x: auto;">
+            <table class="history-table" id="enterprise-threat-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">
+                            <input type="checkbox" id="select-all-threats" onchange="toggleSelectAll(this)">
+                        </th>
+                        <th style="width: 170px; cursor: pointer;" onclick="sortTable('timestamp')">
+                            First Seen (UTC) <span id="sort-timestamp" style="font-size: 0.75rem;">▼</span>
+                        </th>
+                        <th style="cursor: pointer;" onclick="sortTable('url')">
+                            Defanged Indicator <span id="sort-url" style="font-size: 0.75rem;"></span>
+                        </th>
+                        <th style="width: 130px; cursor: pointer;" onclick="sortTable('score')">
+                            Threat Score <span id="sort-score" style="font-size: 0.75rem;"></span>
+                        </th>
+                        <th style="width: 140px; cursor: pointer;" onclick="sortTable('threat_level')">
+                            Classification <span id="sort-threat_level" style="font-size: 0.75rem;"></span>
+                        </th>
+                        <th style="width: 100px; text-align: center;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="threat-db-tbody">
+                    <!-- Populated dynamically by High-Density Table Engine -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div id="table-pagination-bar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <span class="muted-text" id="pagination-info" style="font-size: 0.85rem;">Showing 0 to 0 of 0 records</span>
+            <div id="pagination-controls" style="display: flex; gap: 0.4rem; align-items: center;"></div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Enterprise CSV / Batch File Import Modal -->
+<div class="modal-overlay" id="csv-import-modal" style="display: none;">
+    <div class="modal-card" style="max-width: 620px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; color: #fff;">Enterprise Batch CSV Import</h3>
+            <button type="button" class="toast-close" onclick="closeCsvImportModal()" style="font-size: 1.25rem;">×</button>
+        </div>
+        <p class="muted-text" style="font-size: 0.85rem; margin-bottom: 1.25rem;">Upload a CSV or TXT file containing target URLs (up to 500 records per batch) for parallel threat analysis.</p>
+
+        <!-- Dropzone -->
+        <div id="csv-dropzone" style="border: 2px dashed var(--border); border-radius: 8px; padding: 2.5rem 1.5rem; text-align: center; background: rgba(0,0,0,0.5); cursor: pointer; transition: var(--transition); margin-bottom: 1.25rem;">
+            <input type="file" id="csv-file-input" accept=".csv,.txt" style="display: none;" onchange="handleFileSelected(this.files)">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--mono-light-gray); margin-bottom: 0.75rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p style="color: #ffffff; font-weight: 600; margin-bottom: 0.25rem;">Click to upload or drag & drop</p>
+            <p class="muted-text" style="font-size: 0.8rem;">Supports .csv (auto-detects URL column) or raw .txt</p>
+        </div>
+
+        <div id="file-chosen-info" style="display: none; background: rgba(255,255,255,0.06); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 0.85rem; color: #fff;">
+            Selected: <span id="chosen-file-name">file.csv</span>
+        </div>
+
+        <div id="import-progress" style="display: none; margin-bottom: 1.25rem;">
+            <p class="muted-text" style="font-size: 0.82rem; margin-bottom: 0.5rem;" id="progress-status-text">Processing concurrent batch lookups...</p>
+            <div style="background: #000; border-radius: 4px; height: 8px; overflow: hidden; border: 1px solid var(--border);">
+                <div id="progress-bar-fill" style="background: #ffffff; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+            </div>
+        </div>
+
+        <!-- Import Summary Result Box -->
+        <div id="import-summary" style="display: none; margin-bottom: 1.25rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border); border-radius: 8px; padding: 1rem;">
+            <h4 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Batch Evaluation Summary</h4>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                <div class="glass-card" style="padding: 0.5rem;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase;" class="muted-text">Processed</div>
+                    <div id="summary-total" style="font-size: 1.1rem; font-weight: 800; color: #fff;">0</div>
+                </div>
+                <div class="glass-card" style="padding: 0.5rem;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase;" class="muted-text">High Threats</div>
+                    <div id="summary-high" style="font-size: 1.1rem; font-weight: 800; color: #ff8888;">0</div>
+                </div>
+                <div class="glass-card" style="padding: 0.5rem;">
+                    <div style="font-size: 0.7rem; text-transform: uppercase;" class="muted-text">Low / Clean</div>
+                    <div id="summary-low" style="font-size: 1.1rem; font-weight: 800; color: #88ff88;">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <button type="button" class="btn-primary" id="start-import-btn" style="flex: 1;" onclick="submitCsvImport()">
+                Execute Batch Scan
+            </button>
+            <button type="button" class="btn-ghost" onclick="closeCsvImportModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Advanced Export Modal -->
+<div class="modal-overlay" id="export-modal" style="display: none;">
+    <div class="modal-card">
+        <h3 style="margin-bottom: 0.5rem; color: #fff;">Export Threat Intelligence Dataset</h3>
+        <p class="muted-text" style="font-size: 0.85rem; margin-bottom: 1.5rem;">Download active threat feeds with customized formats and confidence thresholds.</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+            <div>
+                <label style="display: block; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.35rem; color: var(--mono-light-gray);">Format</label>
+                <select id="export-format-select" style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.65rem; border-radius: 4px;">
+                    <option value="csv">CSV Spreadsheet (.csv)</option>
+                    <option value="stix">STIX 2.1 Threat Intel Bundle (.json)</option>
+                    <option value="json">Structured JSON Array (.json)</option>
+                    <option value="txt">Plaintext Firewall Blocklist (.txt)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 0.35rem; color: var(--mono-light-gray);">Minimum Threat Score</label>
+                <select id="export-score-select" style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.65rem; border-radius: 4px;">
+                    <option value="0">All Scores (0% - 100%)</option>
+                    <option value="40">Elevated & Critical Only (&ge; 40%)</option>
+                    <option value="75">Critical Zero-Days Only (&ge; 75%)</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn-primary" style="flex: 1;" onclick="triggerAdvancedExport()">Download Export</button>
+            <button type="button" class="btn-ghost" onclick="closeExportModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Raw Threat dataset injected from backend
+let threatDataset = [
+    {% for scan in scans %}
+    {
+        id: {{ scan.id }},
+        url: {{ scan.url | tojson }},
+        score: {{ scan.score }},
+        threat_level: {{ scan.threat_level | tojson }},
+        timestamp: {{ (scan.timestamp.isoformat() if scan.timestamp else "") | tojson }}
+    },
+    {% endfor %}
+];
+
+let selectedUrls = new Set();
+let currentPage = 1;
+let pageSize = 25;
+let sortColumn = 'timestamp';
+let sortDirection = 'desc';
+
+function defangString(url) {
+    if (!url) return '';
+    return url.replace(/http:\/\//gi, 'hxxp://').replace(/https:\/\//gi, 'hxxps://').replace(/\./g, '[.]');
+}
+
+function renderTable() {
+    const tbody = document.getElementById('threat-db-tbody');
+    const searchVal = (document.getElementById('threat-db-search')?.value || '').toLowerCase().trim();
+    const levelVal = document.getElementById('threat-db-level')?.value || 'all';
+
+    // 1. Filter
+    let filtered = threatDataset.filter(item => {
+        const matchSearch = !searchVal || item.url.toLowerCase().includes(searchVal);
+        const matchLevel = (levelVal === 'all') || (item.threat_level === levelVal);
+        return matchSearch && matchLevel;
+    });
+
+    // 2. Sort
+    filtered.sort((a, b) => {
+        let valA = a[sortColumn];
+        let valB = b[sortColumn];
+        if (sortColumn === 'score') {
+            valA = parseFloat(valA);
+            valB = parseFloat(valB);
+        } else {
+            valA = (valA || '').toString().toLowerCase();
+            valB = (valB || '').toString().toLowerCase();
+        }
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // Update count
+    document.getElementById('threat-count-label').textContent = `Showing ${filtered.length} matching indicators`;
+
+    // 3. Paginate
+    const totalRecords = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalRecords / pageSize));
+    if (currentPage > totalPages) currentPage = totalPages;
+
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, totalRecords);
+    const pageRecords = filtered.slice(startIndex, endIndex);
+
+    if (!pageRecords.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="muted-text" style="text-align:center; padding:2rem;">No threat records found matching current criteria.</td></tr>';
+        document.getElementById('pagination-info').textContent = '0 to 0 of 0 records';
+        document.getElementById('pagination-controls').innerHTML = '';
+        return;
+    }
+
+    tbody.innerHTML = pageRecords.map(item => {
+        const isChecked = selectedUrls.has(item.url);
+        const rawLvl = (item.threat_level || 'low').toLowerCase();
+        const lvlClass = rawLvl === 'high' ? 'pill-high' : (rawLvl === 'medium' ? 'pill-medium' : 'pill-low');
+        const defanged = defangString(item.url);
+        const timeFormatted = item.timestamp ? item.timestamp.replace('T', ' ').slice(0, 16) : '—';
+
+        return `<tr>
+            <td style="text-align: center;">
+                <input type="checkbox" data-url="${encodeURIComponent(item.url)}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelect(this, '${encodeURIComponent(item.url)}')">
+            </td>
+            <td style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--mono-light-gray);">${escapeHtml(timeFormatted)}</td>
+            <td style="font-family: var(--font-mono); word-break: break-all; color: var(--mono-white);">
+                <a href="/?url=${encodeURIComponent(item.url)}" style="color: inherit; text-decoration: underline;">${escapeHtml(defanged)}</a>
+            </td>
+            <td style="font-weight: 800; font-family: var(--font-mono); color: var(--mono-white);">${parseFloat(item.score).toFixed(1)}%</td>
+            <td><span class="history-pill ${lvlClass}">${escapeHtml(item.threat_level.toUpperCase())}</span></td>
+            <td style="text-align: center;">
+                <a href="/?url=${encodeURIComponent(item.url)}" class="btn-ghost" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;">Inspect</a>
+            </td>
+        </tr>`;
+    }).join('');
+
+    // Update pagination controls
+    document.getElementById('pagination-info').textContent = `Showing ${startIndex + 1} to ${endIndex} of ${totalRecords} records`;
+    renderPaginationControls(totalPages);
+}
+
+function sortTable(col) {
+    if (sortColumn === col) {
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortColumn = col;
+        sortDirection = 'desc';
+    }
+    ['timestamp', 'url', 'score', 'threat_level'].forEach(c => {
+        const el = document.getElementById('sort-' + c);
+        if (el) el.textContent = (c === sortColumn) ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+    });
+    renderTable();
+}
+
+function renderPaginationControls(totalPages) {
+    const container = document.getElementById('pagination-controls');
+    if (!container) return;
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    let html = `<button type="button" class="btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.8rem;" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">Prev</button>`;
+    
+    for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2)) {
+            html += `<button type="button" class="btn-ghost ${p === currentPage ? 'active' : ''}" style="padding:0.3rem 0.6rem; font-size:0.8rem; ${p===currentPage ? 'background:#fff; color:#000;' : ''}" onclick="goToPage(${p})">${p}</button>`;
+        } else if (p === currentPage - 3 || p === currentPage + 3) {
+            html += `<span style="color:var(--text-muted);">…</span>`;
+        }
+    }
+    
+    html += `<button type="button" class="btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.8rem;" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">Next</button>`;
+    container.innerHTML = html;
+}
+
+function goToPage(p) {
+    currentPage = p;
+    renderTable();
+}
+
+function toggleRowSelect(cb, encUrl) {
+    const url = decodeURIComponent(encUrl);
+    if (cb.checked) selectedUrls.add(url);
+    else selectedUrls.delete(url);
+    updateBulkActionBar();
+}
+
+function toggleSelectAll(masterCb) {
+    document.querySelectorAll('#threat-db-tbody input[type="checkbox"]').forEach(cb => {
+        cb.checked = masterCb.checked;
+        const u = decodeURIComponent(cb.getAttribute('data-url'));
+        if (masterCb.checked) selectedUrls.add(u);
+        else selectedUrls.delete(u);
+    });
+    updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+    const bar = document.getElementById('bulk-action-bar');
+    const countEl = document.getElementById('selected-count');
+    if (selectedUrls.size > 0) {
+        bar.style.display = 'flex';
+        countEl.textContent = selectedUrls.size;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+function clearSelection() {
+    selectedUrls.clear();
+    const master = document.getElementById('select-all-threats');
+    if (master) master.checked = false;
+    renderTable();
+    updateBulkActionBar();
+}
+
+function copySelectedUrls() {
+    if (!selectedUrls.size) return;
+    const defangedList = Array.from(selectedUrls).map(defangString).join('\n');
+    navigator.clipboard.writeText(defangedList).then(() => {
+        showToast(`Copied ${selectedUrls.size} defanged URLs to clipboard!`, 'success');
+    });
+}
+
+function exportSelected(format) {
+    if (!selectedUrls.size) return;
+    const selectedItems = threatDataset.filter(i => selectedUrls.has(i.url));
+    if (format === 'csv') {
+        const lines = ['indicator_url,threat_score,threat_level,observed_timestamp'];
+        selectedItems.forEach(i => lines.push(`"${i.url}",${i.score},"${i.threat_level}","${i.timestamp}"`));
+        downloadBlob(lines.join('\n'), `selected_threats_${Date.now()}.csv`, 'text/csv');
+    } else if (format === 'stix') {
+        const bundle = {
+            type: "bundle",
+            id: `bundle--${Date.now()}`,
+            objects: selectedItems.map(i => ({
+                type: "indicator",
+                pattern: `[url:value = '${i.url}']`,
+                confidence: parseInt(i.score)
+            }))
+        };
+        downloadBlob(JSON.stringify(bundle, null, 2), `selected_stix_${Date.now()}.json`, 'application/json');
+    }
+}
+
+function downloadBlob(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+    showToast(`Downloaded ${filename}`, 'success');
+}
+
+// Modal Handlers
+let selectedFileToImport = null;
+
+function openCsvImportModal() {
+    document.getElementById('csv-import-modal').style.display = 'flex';
+    document.getElementById('import-summary').style.display = 'none';
+    document.getElementById('import-progress').style.display = 'none';
+    document.getElementById('file-chosen-info').style.display = 'none';
+    selectedFileToImport = null;
+}
+function closeCsvImportModal() {
+    document.getElementById('csv-import-modal').style.display = 'none';
+}
+
+function openExportModal() {
+    document.getElementById('export-modal').style.display = 'flex';
+}
+function closeExportModal() {
+    document.getElementById('export-modal').style.display = 'none';
+}
+function triggerAdvancedExport() {
+    const fmt = document.getElementById('export-format-select').value;
+    const minScore = document.getElementById('export-score-select').value;
+    window.location.href = `/api/threats/export?format=${fmt}&min_score=${minScore}`;
+    closeExportModal();
+    showToast('Export download initialized.', 'info');
+}
+
+// Drag and drop setup
+const dropzone = document.getElementById('csv-dropzone');
+if (dropzone) {
+    dropzone.addEventListener('click', () => document.getElementById('csv-file-input').click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#ffffff'; });
+    dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; });
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = 'var(--border)';
+        if (e.dataTransfer.files.length) handleFileSelected(e.dataTransfer.files);
+    });
+}
+
+function handleFileSelected(files) {
+    if (!files.length) return;
+    selectedFileToImport = files[0];
+    document.getElementById('file-chosen-info').style.display = 'block';
+    document.getElementById('chosen-file-name').textContent = `${selectedFileToImport.name} (${(selectedFileToImport.size / 1024).toFixed(1)} KB)`;
+}
+
+async function submitCsvImport() {
+    if (!selectedFileToImport) {
+        showToast('Please select or drop a CSV or TXT file first.', 'warning');
+        return;
+    }
+    const btn = document.getElementById('start-import-btn');
+    const prog = document.getElementById('import-progress');
+    const bar = document.getElementById('progress-bar-fill');
+    
+    btn.disabled = true;
+    prog.style.display = 'block';
+    bar.style.width = '45%';
+
+    const formData = new FormData();
+    formData.append('file', selectedFileToImport);
+
+    try {
+        const res = await fetch('/api/threats/import-csv', {
+            method: 'POST',
+            body: formData
+        });
+        bar.style.width = '90%';
+        const data = await res.json();
+        
+        if (res.ok) {
+            bar.style.width = '100%';
+            document.getElementById('import-summary').style.display = 'block';
+            document.getElementById('summary-total').textContent = data.total_processed;
+            document.getElementById('summary-high').textContent = data.high_threats;
+            document.getElementById('summary-low').textContent = data.low_threats;
+
+            // Prepend new results to dataset
+            if (data.results && data.results.length) {
+                data.results.forEach(r => {
+                    if (!threatDataset.find(item => item.url === r.url)) {
+                        threatDataset.unshift({
+                            id: Date.now(),
+                            url: r.url,
+                            score: r.score,
+                            threat_level: r.threat_level,
+                            timestamp: new Date().toISOString()
+                        });
+                    }
+                });
+                renderTable();
+            }
+            showToast(`Batch completed: ${data.total_processed} targets evaluated.`, 'success');
+        } else {
+            showToast(data.detail || 'Import failed.', 'error');
+        }
+    } catch {
+        showToast('Network error during file import.', 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderTable();
+
+    const searchInput = document.getElementById('threat-db-search');
+    const levelSelect = document.getElementById('threat-db-level');
+    const pageSizeSelect = document.getElementById('threat-page-size');
+
+    if (searchInput) searchInput.addEventListener('input', () => { currentPage = 1; renderTable(); });
+    if (levelSelect) levelSelect.addEventListener('change', () => { currentPage = 1; renderTable(); });
+    if (pageSizeSelect) pageSizeSelect.addEventListener('change', (e) => {
+        pageSize = parseInt(e.target.value);
+        currentPage = 1;
+        renderTable();
+    });
+});
+</script>
+{% endblock %}

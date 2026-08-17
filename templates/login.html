@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Access Portal — ZeroBait{% endblock %}
+
+{% block content %}
+<main class="page-banner" style="text-align: center; padding: 4.5rem 1.5rem 2rem;">
+    <span class="history-pill pill-medium" style="margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Identity & Access</span>
+    <h1 style="font-size: 2.4rem; margin: 0.5rem 0;">Analyst Access Gateway</h1>
+    <p class="muted-text">Authenticate to track inspection telemetry and forensic scan histories.</p>
+</main>
+
+<section class="auth-section" style="max-width: 460px; margin: 0 auto; padding: 1rem 1.5rem 5rem;">
+    <div class="glass-panel" style="padding: 2.25rem;">
+        
+        <!-- Auth Tabs Toggle -->
+        <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.5); padding: 0.35rem; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 2rem;">
+            <button type="button" id="tab-login-btn" class="btn-primary" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; border-radius: 4px;" onclick="setAuthMode('login')">
+                Sign In
+            </button>
+            <button type="button" id="tab-register-btn" class="btn-ghost" style="flex: 1; padding: 0.5rem; font-size: 0.85rem; border-radius: 4px; justify-content: center;" onclick="setAuthMode('register')">
+                Create Account
+            </button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="login-form">
+            <div style="margin-bottom: 1.25rem;">
+                <label for="login-username" style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mono-light-gray); margin-bottom: 0.4rem;">Username</label>
+                <input type="text" id="login-username" name="username" required autocomplete="username" placeholder="analyst_handle"
+                    style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 1.75rem;">
+                <label for="login-password" style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mono-light-gray); margin-bottom: 0.4rem;">Password</label>
+                <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••••••"
+                    style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;" id="login-submit-btn">
+                Authenticate &rarr;
+            </button>
+        </form>
+
+        <!-- Register Form (Hidden by default) -->
+        <form id="register-form" style="display: none;">
+            <div style="margin-bottom: 1.25rem;">
+                <label for="reg-username" style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mono-light-gray); margin-bottom: 0.4rem;">Choose Username</label>
+                <input type="text" id="reg-username" name="username" required placeholder="analyst_handle"
+                    style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label for="reg-email" style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mono-light-gray); margin-bottom: 0.4rem;">Corporate Email</label>
+                <input type="email" id="reg-email" name="email" required placeholder="analyst@domain.com"
+                    style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+            </div>
+
+            <div style="margin-bottom: 1.75rem;">
+                <label for="reg-password" style="display: block; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--mono-light-gray); margin-bottom: 0.4rem;">Create Password (Min 8 Chars)</label>
+                <input type="password" id="reg-password" name="password" minlength="8" required placeholder="••••••••••••"
+                    style="width: 100%; background: rgba(0,0,0,0.6); border: 1px solid var(--border); color: #ffffff; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; outline: none;">
+            </div>
+
+            <button type="submit" class="btn-primary" style="width: 100%; padding: 0.85rem; font-size: 1rem;" id="reg-submit-btn">
+                Create Account &rarr;
+            </button>
+        </form>
+
+    </div>
+</section>
+
+<script>
+function setAuthMode(mode) {
+    const loginForm = document.getElementById('login-form');
+    const regForm = document.getElementById('register-form');
+    const loginTab = document.getElementById('tab-login-btn');
+    const regTab = document.getElementById('tab-register-btn');
+
+    if (mode === 'register') {
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        regTab.className = 'btn-primary';
+        loginTab.className = 'btn-ghost';
+    } else {
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+        loginTab.className = 'btn-primary';
+        regTab.className = 'btn-ghost';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if redirected to register mode via query param
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'register') {
+        setAuthMode('register');
+    }
+
+    // Login Handler
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Authenticating...';
+
+            const payload = {
+                username: document.getElementById('login-username').value.trim(),
+                password: document.getElementById('login-password').value
+            };
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    window.location.href = '/profile';
+                } else {
+                    showToast(data.detail || 'Authentication failed.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Authenticate →';
+                }
+            } catch {
+                showToast('Network connection error.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Authenticate →';
+            }
+        });
+    }
+
+    // Register Handler
+    const regForm = document.getElementById('register-form');
+    if (regForm) {
+        regForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('reg-submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Creating Account...';
+
+            const payload = {
+                username: document.getElementById('reg-username').value.trim(),
+                email: document.getElementById('reg-email').value.trim(),
+                password: document.getElementById('reg-password').value
+            };
+
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('Account registered! Please sign in.', 'success');
+                    setAuthMode('login');
+                    document.getElementById('login-username').value = payload.username;
+                } else {
+                    showToast(data.detail || 'Registration failed.', 'error');
+                }
+            } catch {
+                showToast('Network error during registration.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account →';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Enterprise SOC Administration — ZeroBait{% endblock %}
+
+{% block content %}
+<main class="page-banner" style="text-align: center; padding: 4rem 1.5rem 2rem;">
+    <span class="history-pill pill-high" style="margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Enterprise Governance</span>
+    <h1 style="font-size: clamp(2.2rem, 4vw, 3.2rem); margin: 0.5rem 0 0.8rem;">SOC Administration Console</h1>
+    <p class="muted-text">Role-Based Access Control (RBAC), incident dispatch triage, and system audit telemetry.</p>
+</main>
+
+<section class="container" style="max-width: 1200px; padding-bottom: 5rem;">
+
+    <!-- KPI Metric Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem;">
+        <div class="glass-card">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;">Total Analysts</div>
+            <div class="stat-number" id="admin-stat-users" style="margin-top: 0.35rem;">0</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Registered platform identities</p>
+        </div>
+        <div class="glass-card">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;">Active Admins</div>
+            <div class="stat-number" id="admin-stat-admins" style="margin-top: 0.35rem;">0</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Privileged SOC controllers</p>
+        </div>
+        <div class="glass-card">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;">Global Scans</div>
+            <div class="stat-number" id="admin-stat-scans" style="margin-top: 0.35rem;">0</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Total telemetry evaluations</p>
+        </div>
+        <div class="glass-card">
+            <div class="muted-text" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em;">Open Inquiries</div>
+            <div class="stat-number" id="admin-stat-inquiries" style="margin-top: 0.35rem;">0</div>
+            <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Awaiting SOC triage</p>
+        </div>
+    </div>
+
+    <!-- Admin Navigation Tabs -->
+    <div class="glass-panel" style="margin-bottom: 2rem; padding: 0.75rem 1.25rem;">
+        <div class="tabs" role="tablist" style="margin-bottom: 0;">
+            <button class="tab active" id="tab-rbac-users" role="tab" onclick="switchAdminTab('users')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Analyst Directory & RBAC
+            </button>
+            <button class="tab" id="tab-rbac-inquiries" role="tab" onclick="switchAdminTab('inquiries')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                Incident & Inquiry Queue
+            </button>
+            <button class="tab" id="tab-rbac-audit" role="tab" onclick="switchAdminTab('audit')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Audit Trails
+            </button>
+            <button class="tab" id="tab-rbac-system" role="tab" onclick="switchAdminTab('system')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                System Telemetry
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab 1: User & RBAC Directory -->
+    <div class="admin-panel active" id="admin-panel-users">
+        <div class="glass-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="color: #ffffff; font-size: 1.2rem; margin-bottom: 0.25rem;">Enterprise Analyst Directory</h3>
+                    <p class="muted-text" style="font-size: 0.85rem;">Manage security clearances, RBAC permissions, and analyst credentials.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <input type="text" id="admin-user-search" placeholder="Filter by username or email..."
+                        style="background: #000; border: 1px solid var(--border); color: #fff; padding: 0.5rem 0.85rem; border-radius: 6px; font-size: 0.85rem; outline: none; width: 220px;">
+                    <button type="button" class="btn-ghost" onclick="loadAdminUsers()" style="font-size: 0.85rem; padding: 0.5rem 0.85rem;">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Username</th>
+                            <th>Email Address</th>
+                            <th style="width: 120px;">Clearance / Role</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 100px;">Total Scans</th>
+                            <th style="width: 140px;">Created Date</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-users-tbody">
+                        <tr>
+                            <td colspan="8" class="muted-text" style="text-align: center; padding: 2rem;">Loading analyst directory...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Incident & Inquiries Queue -->
+    <div class="admin-panel" id="admin-panel-inquiries" style="display: none;">
+        <div class="glass-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="color: #ffffff; font-size: 1.2rem; margin-bottom: 0.25rem;">Security Incident & Contact Queue</h3>
+                    <p class="muted-text" style="font-size: 0.85rem;">Triage submitted API queries, false positive reports, and support dispatches.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select id="inquiry-filter-status" onchange="loadAdminInquiries()"
+                        style="background: #111; border: 1px solid var(--border); color: #fff; padding: 0.5rem 0.85rem; border-radius: 6px; font-size: 0.85rem; outline: none; cursor: pointer;">
+                        <option value="all">All Inquiries</option>
+                        <option value="pending" selected>Pending Triage</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="dismissed">Dismissed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 140px;">Received (UTC)</th>
+                            <th style="width: 150px;">Submitter</th>
+                            <th style="width: 120px;">Topic</th>
+                            <th>Subject & Payload</th>
+                            <th style="width: 110px;">Status</th>
+                            <th style="width: 130px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-inquiries-tbody">
+                        <tr>
+                            <td colspan="6" class="muted-text" style="text-align: center; padding: 2rem;">Loading incident queue...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Security Audit Trails -->
+    <div class="admin-panel" id="admin-panel-audit" style="display: none;">
+        <div class="glass-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h3 style="color: #ffffff; font-size: 1.2rem; margin-bottom: 0.25rem;">Administrative Audit Log</h3>
+                    <p class="muted-text" style="font-size: 0.85rem;">Immutable activity trails of RBAC adjustments and incident resolutions.</p>
+                </div>
+                <button type="button" class="btn-ghost" onclick="loadAdminAuditLogs()" style="font-size: 0.85rem; padding: 0.5rem 0.85rem;">
+                    🔄 Refresh Audit
+                </button>
+            </div>
+
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 160px;">Timestamp (UTC)</th>
+                            <th style="width: 140px;">Admin Account</th>
+                            <th style="width: 160px;">Action</th>
+                            <th style="width: 180px;">Target Entity</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-audit-tbody">
+                        <tr>
+                            <td colspan="5" class="muted-text" style="text-align: center; padding: 2rem;">Loading audit trails...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: System Telemetry & Performance -->
+    <div class="admin-panel" id="admin-panel-system" style="display: none;">
+        <div class="glass-panel">
+            <h3 style="color: #ffffff; font-size: 1.2rem; margin-bottom: 0.5rem;">Autonomous Infrastructure Telemetry</h3>
+            <p class="muted-text" style="font-size: 0.85rem; margin-bottom: 1.75rem;">Real-time service health, database replication mode, and inference pipeline latency.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+                <div class="glass-card">
+                    <span class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Runtime State</span>
+                    <div style="font-size: 1.25rem; font-weight: 800; font-family: var(--font-mono); color: #ffffff; margin-top: 0.35rem;">
+                        ONLINE / HEALTHY
+                    </div>
+                    <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">FastAPI + Uvicorn ASGI</p>
+                </div>
+                <div class="glass-card">
+                    <span class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Database Storage</span>
+                    <div style="font-size: 1.25rem; font-weight: 800; font-family: var(--font-mono); color: #ffffff; margin-top: 0.35rem;">
+                        SQLite (WAL Mode)
+                    </div>
+                    <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Concurrent read-optimized</p>
+                </div>
+                <div class="glass-card">
+                    <span class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">ML Ensemble Model</span>
+                    <div style="font-size: 1.25rem; font-weight: 800; font-family: var(--font-mono); color: #ffffff; margin-top: 0.35rem;">
+                        Random Forest (521 MB)
+                    </div>
+                    <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">In-memory serialized estimator</p>
+                </div>
+                <div class="glass-card">
+                    <span class="muted-text" style="font-size: 0.75rem; text-transform: uppercase;">Threat Heuristics Engine</span>
+                    <div style="font-size: 1.25rem; font-weight: 800; font-family: var(--font-mono); color: #ffffff; margin-top: 0.35rem;">
+                        22 Signals + Brand Radar
+                    </div>
+                    <p class="muted-text" style="font-size: 0.75rem; margin-top: 0.2rem;">Non-blocking ThreadPool</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let adminUsers = [];
+
+function switchAdminTab(tabName) {
+    document.querySelectorAll('#admin-panel-users, #admin-panel-inquiries, #admin-panel-audit, #admin-panel-system').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+
+    const activePanel = document.getElementById('admin-panel-' + tabName);
+    const activeTab = document.getElementById('tab-rbac-' + tabName);
+    if (activePanel) activePanel.style.display = 'block';
+    if (activeTab) activeTab.classList.add('active');
+
+    if (tabName === 'users') loadAdminUsers();
+    if (tabName === 'inquiries') loadAdminInquiries();
+    if (tabName === 'audit') loadAdminAuditLogs();
+}
+
+async function loadAdminStats() {
+    try {
+        const res = await fetch('/api/admin/metrics');
+        if (!res.ok) return;
+        const d = await res.json();
+        document.getElementById('admin-stat-users').textContent = d.total_users || 0;
+        document.getElementById('admin-stat-admins').textContent = d.total_admins || 0;
+        document.getElementById('admin-stat-scans').textContent = (d.total_scans || 0).toLocaleString();
+        document.getElementById('admin-stat-inquiries').textContent = d.pending_inquiries || 0;
+    } catch { }
+}
+
+async function loadAdminUsers() {
+    const tbody = document.getElementById('admin-users-tbody');
+    try {
+        const res = await fetch('/api/admin/users');
+        if (!res.ok) {
+            tbody.innerHTML = '<tr><td colspan="8" class="muted-text" style="text-align:center; padding:2rem;">Failed to load user directory. Ensure you have administrator clearance.</td></tr>';
+            return;
+        }
+        adminUsers = await res.json();
+        renderAdminUsers(adminUsers);
+    } catch {
+        tbody.innerHTML = '<tr><td colspan="8" class="muted-text" style="text-align:center; padding:2rem;">Connection error loading directory.</td></tr>';
+    }
+}
+
+function renderAdminUsers(users) {
+    const tbody = document.getElementById('admin-users-tbody');
+    const searchVal = (document.getElementById('admin-user-search')?.value || '').toLowerCase().trim();
+    
+    const filtered = users.filter(u => 
+        !searchVal || u.username.toLowerCase().includes(searchVal) || u.email.toLowerCase().includes(searchVal)
+    );
+
+    if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="muted-text" style="text-align:center; padding:2rem;">No matching analyst records found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(u => {
+        const isAdmin = u.role === 'admin';
+        const isActive = u.is_active !== false;
+        const rolePill = isAdmin 
+            ? '<span class="history-pill pill-high">ADMIN</span>' 
+            : '<span class="history-pill pill-low">ANALYST</span>';
+        const statusPill = isActive
+            ? '<span class="history-pill pill-low" style="background:rgba(255,255,255,0.1);">ACTIVE</span>'
+            : '<span class="history-pill pill-high" style="background:rgba(255,100,100,0.2);">SUSPENDED</span>';
+        
+        const nextRole = isAdmin ? 'analyst' : 'admin';
+        const roleBtnLabel = isAdmin ? 'Demote to Analyst' : 'Promote to Admin';
+        const statusBtnLabel = isActive ? 'Suspend' : 'Reactivate';
+        const statusAction = isActive ? 'false' : 'true';
+
+        return `<tr>
+            <td style="font-family:var(--font-mono); font-size:0.85rem; color:var(--mono-light-gray);">${u.id}</td>
+            <td style="font-weight:700; color:#ffffff;">${escapeHtml(u.username)}</td>
+            <td style="font-family:var(--font-mono); font-size:0.85rem; color:var(--mono-silver);">${escapeHtml(u.email)}</td>
+            <td>${rolePill}</td>
+            <td>${statusPill}</td>
+            <td style="font-weight:700; font-family:var(--font-mono); color:#ffffff;">${u.scan_count || 0}</td>
+            <td style="font-size:0.82rem; color:var(--text-muted); font-family:var(--font-mono);">${u.created_at ? u.created_at.slice(0, 10) : '—'}</td>
+            <td>
+                <div style="display:flex; gap:0.4rem;">
+                    <button type="button" class="btn-ghost" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="updateUserRole(${u.id}, '${nextRole}')">
+                        ${roleBtnLabel}
+                    </button>
+                    <button type="button" class="btn-ghost" style="padding:0.25rem 0.5rem; font-size:0.75rem; color:${isActive ? '#ff8888' : '#88ff88'};" onclick="updateUserStatus(${u.id}, ${statusAction})">
+                        ${statusBtnLabel}
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function updateUserRole(userId, newRole) {
+    if (!confirm(`Are you sure you want to change user #${userId}'s role to '${newRole}'?`)) return;
+    try {
+        const res = await fetch(`/api/admin/users/${userId}/role`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: newRole })
+        });
+        const d = await res.json();
+        if (res.ok) {
+            showToast(d.message || 'User role updated.', 'success');
+            loadAdminUsers();
+            loadAdminStats();
+        } else {
+            showToast(d.detail || 'Failed to update role.', 'error');
+        }
+    } catch {
+        showToast('Network error updating role.', 'error');
+    }
+}
+
+async function updateUserStatus(userId, isActive) {
+    const actionLabel = isActive ? 'reactivate' : 'suspend';
+    if (!confirm(`Are you sure you want to ${actionLabel} account #${userId}?`)) return;
+    try {
+        const res = await fetch(`/api/admin/users/${userId}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: isActive })
+        });
+        const d = await res.json();
+        if (res.ok) {
+            showToast(d.message || 'User status updated.', 'success');
+            loadAdminUsers();
+            loadAdminStats();
+        } else {
+            showToast(d.detail || 'Failed to update status.', 'error');
+        }
+    } catch {
+        showToast('Network error updating status.', 'error');
+    }
+}
+
+async function loadAdminInquiries() {
+    const tbody = document.getElementById('admin-inquiries-tbody');
+    const filter = document.getElementById('inquiry-filter-status')?.value || 'all';
+    try {
+        const res = await fetch(`/api/admin/inquiries?status=${filter}`);
+        if (!res.ok) return;
+        const items = await res.json();
+        if (!items.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="muted-text" style="text-align:center; padding:2rem;">Zero inquiries found in this queue.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = items.map(m => {
+            const isResolved = m.status === 'resolved';
+            const statusClass = isResolved ? 'pill-low' : (m.status === 'pending' ? 'pill-high' : 'pill-medium');
+            return `<tr>
+                <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">${m.timestamp ? m.timestamp.slice(0, 16).replace('T', ' ') : '—'}</td>
+                <td>
+                    <strong style="color:#fff;">${escapeHtml(m.name)}</strong>
+                    <div style="font-size:0.75rem; color:var(--mono-light-gray); font-family:var(--font-mono);">${escapeHtml(m.email)}</div>
+                </td>
+                <td><span class="history-pill pill-medium" style="font-size:0.72rem;">${escapeHtml(m.inquiry_type)}</span></td>
+                <td>
+                    <div style="font-weight:600; color:#fff; font-size:0.88rem;">${escapeHtml(m.subject)}</div>
+                    <div style="font-size:0.8rem; color:var(--mono-silver); margin-top:0.2rem; max-width:400px; word-break:break-word;">${escapeHtml(m.message)}</div>
+                </td>
+                <td><span class="history-pill ${statusClass}">${escapeHtml(m.status.toUpperCase())}</span></td>
+                <td>
+                    <select onchange="updateInquiryStatus(${m.id}, this.value)" style="background:#000; border:1px solid var(--border); color:#fff; padding:0.25rem 0.5rem; border-radius:4px; font-size:0.78rem; outline:none; cursor:pointer;">
+                        <option value="pending" ${m.status==='pending'?'selected':''}>Pending</option>
+                        <option value="resolved" ${m.status==='resolved'?'selected':''}>Resolved</option>
+                        <option value="dismissed" ${m.status==='dismissed'?'selected':''}>Dismiss</option>
+                    </select>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch {
+        tbody.innerHTML = '<tr><td colspan="6" class="muted-text" style="text-align:center; padding:2rem;">Error loading inquiries.</td></tr>';
+    }
+}
+
+async function updateInquiryStatus(msgId, newStatus) {
+    try {
+        const res = await fetch(`/api/admin/inquiries/${msgId}/status`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+            showToast('Inquiry status updated.', 'success');
+            loadAdminInquiries();
+            loadAdminStats();
+        }
+    } catch {
+        showToast('Error updating inquiry status.', 'error');
+    }
+}
+
+async function loadAdminAuditLogs() {
+    const tbody = document.getElementById('admin-audit-tbody');
+    try {
+        const res = await fetch('/api/admin/audit-logs');
+        if (!res.ok) return;
+        const logs = await res.json();
+        if (!logs.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="muted-text" style="text-align:center; padding:2rem;">No administrative audit actions recorded yet.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = logs.map(l => `<tr>
+            <td style="font-family:var(--font-mono); font-size:0.82rem; color:var(--text-muted);">${l.timestamp ? l.timestamp.slice(0, 19).replace('T', ' ') : '—'}</td>
+            <td style="font-weight:600; color:#fff;">${escapeHtml(l.admin_username || ('Admin #' + l.admin_id))}</td>
+            <td><code style="font-family:var(--font-mono); font-size:0.82rem; background:rgba(255,255,255,0.06); padding:0.15rem 0.4rem; border-radius:3px; color:#fff;">${escapeHtml(l.action)}</code></td>
+            <td style="font-family:var(--font-mono); font-size:0.85rem; color:var(--mono-silver);">${escapeHtml(l.target || '—')}</td>
+            <td style="font-size:0.82rem; color:var(--text-secondary);">${escapeHtml(l.details || '—')}</td>
+        </tr>`).join('');
+    } catch {
+        tbody.innerHTML = '<tr><td colspan="5" class="muted-text" style="text-align:center; padding:2rem;">Error loading audit logs.</td></tr>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadAdminStats();
+    loadAdminUsers();
+    
+    const userSearch = document.getElementById('admin-user-search');
+    if (userSearch) {
+        userSearch.addEventListener('input', () => renderAdminUsers(adminUsers));
+    }
+});
+</script>
+{% endblock %}

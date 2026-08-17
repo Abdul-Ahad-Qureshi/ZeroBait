@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}SOC Analyst Tools & Forensic Utilities — ZeroBait{% endblock %}
+
+{% block content %}
+<!-- Page Banner -->
+<section class="page-banner" style="text-align: center; padding: 4.5rem 1.5rem 2rem;">
+    <div style="max-width: 820px; margin: 0 auto;">
+        <span class="history-pill pill-medium" style="margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Forensic Utilities</span>
+        <h1 style="font-size: clamp(2.2rem, 4.5vw, 3.2rem); margin: 0.5rem 0 1rem;">SOC Analyst Toolkit</h1>
+        <p class="muted-text" style="font-size: 1.05rem; line-height: 1.6;">
+            Essential cryptographic sanitization, Base64 de-obfuscation, and hash-pivoting tools for security operations center (SOC) triage.
+        </p>
+    </div>
+</section>
+
+<div class="container" style="max-width: 1160px; padding-bottom: 5rem;">
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+
+        <!-- Tool 1: URL Defanger / Refanger -->
+        <div class="glass-panel" style="padding: 2rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
+                <span style="font-size: 1.35rem;">🛡️</span>
+                <div>
+                    <h3 style="font-size: 1.15rem; color: #fff; margin: 0;">URL Defanger / Refanger</h3>
+                    <p class="muted-text" style="font-size: 0.8rem;">Convert active links into inert strings for safe sharing.</p>
+                </div>
+            </div>
+
+            <textarea id="tool-defang-input" rows="3" placeholder="https://malicious-domain.xyz/login?id=921"
+                style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.85rem; outline: none; margin-bottom: 0.75rem; resize: vertical;"></textarea>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button type="button" class="btn-primary" style="flex: 1; padding: 0.55rem; font-size: 0.82rem;" onclick="runToolDefang()">Defang (hxxp)</button>
+                <button type="button" class="btn-ghost" style="flex: 1; padding: 0.55rem; font-size: 0.82rem;" onclick="runToolRefang()">Refang (http)</button>
+            </div>
+
+            <div class="code-box" id="tool-defang-output" style="min-height: 48px; word-break: break-all; margin-bottom: 0.75rem;">
+                Awaiting input...
+            </div>
+
+            <button type="button" class="btn-ghost" style="width: 100%; font-size: 0.82rem; padding: 0.5rem;" onclick="copyBoxText('tool-defang-output')">Copy Defanged Output</button>
+        </div>
+
+        <!-- Tool 2: Base64 De-obfuscator -->
+        <div class="glass-panel" style="padding: 2rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
+                <span style="font-size: 1.35rem;">🔓</span>
+                <div>
+                    <h3 style="font-size: 1.15rem; color: #fff; margin: 0;">Base64 De-obfuscator</h3>
+                    <p class="muted-text" style="font-size: 0.8rem;">Decode obfuscated parameters found in phishing URLs.</p>
+                </div>
+            </div>
+
+            <textarea id="tool-b64-input" rows="3" placeholder="YWxpY2VAZXhhbXBsZS5jb20= or entire URL with ?user=..."
+                style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.85rem; outline: none; margin-bottom: 0.75rem; resize: vertical;"></textarea>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <button type="button" class="btn-primary" style="flex: 1; padding: 0.55rem; font-size: 0.82rem;" onclick="runToolB64Decode()">Decode Base64</button>
+                <button type="button" class="btn-ghost" style="flex: 1; padding: 0.55rem; font-size: 0.82rem;" onclick="runToolB64Encode()">Encode</button>
+            </div>
+
+            <div class="code-box" id="tool-b64-output" style="min-height: 48px; word-break: break-all; margin-bottom: 0.75rem;">
+                Awaiting input...
+            </div>
+
+            <button type="button" class="btn-ghost" style="width: 100%; font-size: 0.82rem; padding: 0.5rem;" onclick="copyBoxText('tool-b64-output')">Copy Decoded Value</button>
+        </div>
+
+        <!-- Tool 3: URL Hash Calculator (SHA-256 / MD5) -->
+        <div class="glass-panel" style="padding: 2rem;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
+                <span style="font-size: 1.35rem;">#️⃣</span>
+                <div>
+                    <h3 style="font-size: 1.15rem; color: #fff; margin: 0;">URL Cryptographic Hashes</h3>
+                    <p class="muted-text" style="font-size: 0.8rem;">Calculate SHA-256 for VirusTotal & SIEM IOC search.</p>
+                </div>
+            </div>
+
+            <input type="text" id="tool-hash-input" placeholder="https://example.com/target"
+                style="width: 100%; background: #000; border: 1px solid var(--border); color: #fff; padding: 0.75rem; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.85rem; outline: none; margin-bottom: 0.75rem;">
+
+            <button type="button" class="btn-primary" style="width: 100%; padding: 0.55rem; font-size: 0.82rem; margin-bottom: 1rem;" onclick="runToolHash()">Compute Hashes</button>
+
+            <div class="code-box" id="tool-hash-output" style="min-height: 48px; font-size: 0.78rem; line-height: 1.6; margin-bottom: 0.75rem;">
+                SHA-256: —<br>
+                MD5: —
+            </div>
+
+            <button type="button" class="btn-ghost" style="width: 100%; font-size: 0.82rem; padding: 0.5rem;" onclick="copyBoxText('tool-hash-output')">Copy Hash</button>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+function runToolDefang() {
+    const val = document.getElementById('tool-defang-input').value.trim();
+    if (!val) return;
+    const def = val.replace(/http:\/\//gi, 'hxxp://').replace(/https:\/\//gi, 'hxxps://').replace(/\./g, '[.]');
+    document.getElementById('tool-defang-output').textContent = def;
+}
+
+function runToolRefang() {
+    const val = document.getElementById('tool-defang-input').value.trim();
+    if (!val) return;
+    const ref = val.replace(/hxxp:\/\//gi, 'http://').replace(/hxxps:\/\//gi, 'https://').replace(/\[\.\]/g, '.').replace(/\(\.\)/g, '.');
+    document.getElementById('tool-defang-output').textContent = ref;
+}
+
+function runToolB64Decode() {
+    const val = document.getElementById('tool-b64-input').value.trim();
+    if (!val) return;
+    try {
+        // Try decoding directly or search for b64 string
+        let target = val;
+        if (val.includes('=')) {
+            const parts = val.split(/[?&=]/);
+            for (let p of parts) {
+                if (p.length > 8 && /^[A-Za-z0-9+/]+={0,2}$/.test(p)) {
+                    target = p;
+                    break;
+                }
+            }
+        }
+        const dec = atob(target);
+        document.getElementById('tool-b64-output').textContent = `Decoded: ${dec}`;
+    } catch {
+        document.getElementById('tool-b64-output').textContent = "Error: Invalid Base64 payload.";
+    }
+}
+
+function runToolB64Encode() {
+    const val = document.getElementById('tool-b64-input').value.trim();
+    if (!val) return;
+    document.getElementById('tool-b64-output').textContent = btoa(val);
+}
+
+async function runToolHash() {
+    const val = document.getElementById('tool-hash-input').value.trim();
+    if (!val) return;
+    const msgBuffer = new TextEncoder().encode(val);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const sha256 = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    document.getElementById('tool-hash-output').innerHTML = `<strong>SHA-256:</strong><br>${sha256}`;
+}
+
+function copyBoxText(elId) {
+    const txt = document.getElementById(elId).innerText;
+    if (txt && !txt.includes('Awaiting')) {
+        navigator.clipboard.writeText(txt).then(() => showToast('Copied to clipboard!', 'success'));
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ZeroBait is an enterprise phishing and malicious URL detection platform powered by machine learning and heuristic security analysis.">
+    <title>{% block title %}ZeroBait — Phishing & Threat Intelligence Platform{% endblock %}</title>
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <div id="particles-js"></div>
+
+    <!-- Navigation Bar -->
+    <nav class="main-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/images/logo.png" alt="ZeroBait" class="nav-brand-logo">
+                <div class="nav-brand">
+                    <span class="brand-title">ZeroBait</span>
+                </div>
+            </a>
+            
+            <div class="nav-hamburger" id="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="nav-links" id="nav-links">
+                <a href="/" class="nav-link {% if active_page == 'home' %}active{% endif %}">Home</a>
+                <a href="/tracker" class="nav-link {% if active_page == 'tracker' %}active{% endif %}">Live Tracker</a>
+                <a href="/threats" class="nav-link {% if active_page == 'threats' %}active{% endif %}">Threat DB</a>
+                <a href="/tools" class="nav-link {% if active_page == 'tools' %}active{% endif %}">SOC Tools</a>
+                <a href="/about" class="nav-link {% if active_page == 'about' %}active{% endif %}">About</a>
+                <a href="/contact" class="nav-link {% if active_page == 'contact' %}active{% endif %}">Contact</a>
+                
+                {% if user %}
+                    {% if user.role == 'admin' %}
+                    <a href="/admin" class="nav-link {% if active_page == 'admin' %}active{% endif %}" style="border: 1px solid var(--border); padding: 0.35rem 0.65rem; border-radius: 4px; color: #ffffff;">Admin Console</a>
+                    {% endif %}
+                    <a href="/profile" class="nav-link {% if active_page == 'profile' %}active{% endif %}">Analyst Workspace ({{ user.username }})</a>
+                    <a href="/logout" class="nav-link">Sign Out</a>
+                {% else %}
+                    <a href="/login" class="btn-primary" style="padding: 0.45rem 1.1rem; font-size: 0.85rem; border-radius: 6px;">Sign In / Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <img src="/static/images/logo.png" alt="ZeroBait" class="footer-brand-logo">
+                <div class="brand-text">
+                    <strong>ZeroBait</strong>
+                    <p>Next-gen phishing intelligence powered by machine learning.</p>
+                </div>
+            </div>
+            <div class="footer-links">
+                <div class="link-col">
+                    <h4>Product</h4>
+                    <a href="/#scanner">Scanner</a>
+                    <a href="/tracker">Live Threat Tracker</a>
+                    <a href="/about">How it works</a>
+                </div>
+                <div class="link-col">
+                    <h4>Company & Compliance</h4>
+                    <a href="/about">About Us</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/privacy">Privacy Policy</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 ZeroBait. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

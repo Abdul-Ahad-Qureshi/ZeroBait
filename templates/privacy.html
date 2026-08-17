@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy & Data Governance — ZeroBait{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-banner" style="text-align: center; padding: 4.5rem 1.5rem 2.5rem;">
+    <div style="max-width: 780px; margin: 0 auto;">
+        <span class="history-pill pill-medium" style="margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem;">Data Governance & Compliance</span>
+        <h1 style="font-size: clamp(2rem, 4vw, 3rem); margin: 0.5rem 0 1rem;">Privacy Policy & Telemetry Standard</h1>
+        <p class="muted-text" style="font-size: 1.05rem; line-height: 1.6;">
+            Transparency, zero-retention guest analysis, and cryptographically isolated personal telemetry under GDPR and CCPA standards.
+        </p>
+    </div>
+</section>
+
+<div class="container" style="max-width: 900px; padding-bottom: 5rem;">
+
+    <div class="glass-panel" style="margin-bottom: 2rem;">
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+            <div style="font-size: 1.5rem;">🛡️</div>
+            <div>
+                <h2 style="font-size: 1.25rem; color: #fff; margin-bottom: 0.2rem;">Core Privacy Principles</h2>
+                <p class="muted-text" style="font-size: 0.85rem;">Last revised: August 2026</p>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; line-height: 1.7; color: var(--mono-silver); font-size: 0.95rem;">
+            <div>
+                <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.5rem;">1. Guest Analysis (Zero Account Requirement)</h3>
+                <p style="color: var(--text-secondary);">
+                    Any analyst or user can inspect target URLs and access real-time heuristic scoring without registering an account. Guest submissions are evaluated in ephemeral memory. Guest queries do not establish a persistent user profile and are not tied to any personal identifiers.
+                </p>
+            </div>
+
+            <div>
+                <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.5rem;">2. Isolation of Personal Scan Data</h3>
+                <p style="color: var(--text-secondary);">
+                    When authenticated under a registered account, your scan history is strictly associated with your unique account identifier (<code style="color:#fff;">user_id</code>). <strong>No user can ever query or view another user's personal inspection logs.</strong> Only anonymized global telemetry aggregates (such as total threat counts and TLD frequencies) are displayed on the public Live Threat Tracker.
+                </p>
+            </div>
+
+            <div>
+                <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.5rem;">3. Cryptographic Password Security</h3>
+                <p style="color: var(--text-secondary);">
+                    User credentials are encrypted using industry-standard <strong>bcrypt</strong> with salt hashing before database commitment. Plaintext passwords are never logged, transmitted, or accessible by our administrators.
+                </p>
+            </div>
+
+            <div>
+                <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.5rem;">4. Telemetry Sanitization & Defanging</h3>
+                <p style="color: var(--text-secondary);">
+                    When sharing or indexing indicators of compromise (IOCs), our engine automatically offers defanged formatting (e.g. <code style="color:#fff;">hxxp://domain[.]com</code>) to prevent accidental click-throughs or automated browser pre-fetching.
+                </p>
+            </div>
+
+            <div>
+                <h3 style="color: #ffffff; font-size: 1.1rem; margin-bottom: 0.5rem;">5. Right to Erasure (GDPR Article 17)</h3>
+                <p style="color: var(--text-secondary);">
+                    Logged-in analysts maintain complete sovereignty over their data. You may export your entire audit history as CSV or permanently purge all personal inspection logs directly from your <a href="/profile" style="color: #ffffff; text-decoration: underline;">Analyst Workspace</a> at any time.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Summary -->
+    <div class="glass-card">
+        <h3 style="color: #ffffff; font-size: 1.05rem; margin-bottom: 1rem;">Data Retention & Processing Summary</h3>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Data Category</th>
+                    <th>Guest User</th>
+                    <th>Registered Analyst</th>
+                    <th>Storage Mechanism</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="color: #fff; font-weight: 600;">Scanned URL</td>
+                    <td>Ephemeral Ingestion</td>
+                    <td>Linked to Account</td>
+                    <td>Encrypted DB Column</td>
+                </tr>
+                <tr>
+                    <td style="color: #fff; font-weight: 600;">IP Address</td>
+                    <td>Rate Limiting Only (60s)</td>
+                    <td>Rate Limiting Only (60s)</td>
+                    <td>In-Memory Volatile Cache</td>
+                </tr>
+                <tr>
+                    <td style="color: #fff; font-weight: 600;">Personal History</td>
+                    <td>Disabled (None Saved)</td>
+                    <td>Persisted Until Deleted</td>
+                    <td>SQL Relational Store</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}
