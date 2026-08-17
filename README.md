@@ -1,10 +1,5 @@
 # 🛡️ ZeroBait — Phishing & Threat Intelligence Platform
 
-![Python](https://img.shields.io/badge/python-3.8%2B-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-green)
-![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-orange)
-![License](https://img.shields.io/badge/license-MIT-blue)
-
 A comprehensive Cyber Threat Intelligence dashboard, real-time URL heuristic/ML analysis engine, and SOC monitoring toolkit built with **FastAPI**, **Jinja2**, and **Scikit-Learn**.
 
 ---
@@ -76,11 +71,3 @@ uvicorn app:app --reload --port 8000
 Once the server is running, you can access the platform and its tools via your web browser:
 
 * **Main Dashboard:** [http://127.0.0.1:8000](http://127.0.0.1:8000)
-* **Swagger API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-* **ReDoc API Docs:** [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
-
----
-
-## 📄 License
-
-This project is licensed under the [MIT License](LICENSE).
